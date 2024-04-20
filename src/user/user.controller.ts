@@ -5,6 +5,7 @@ import { UpdatePutUserDto } from "./dto/update-put-user.dto";
 import { UpdatePatchUserDto } from "./dto/update-patch-user.dto";
 import { UserService } from "./user.service";
 import { LogInterceptor } from "src/interceptors/log.interceptor";
+import { ParamId } from "src/decorators/param-id.decorator";
 
 @Controller('users')
 export class UserController{
@@ -23,7 +24,7 @@ export class UserController{
     }
 
     @Get(':id')
-    async readOne(@Param('id', ParseIntPipe) id: number){
+    async readOne(@ParamId() id: number){ // com decorator param customizado
         return this.userService.show(id);
     }
 
