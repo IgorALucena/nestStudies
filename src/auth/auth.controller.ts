@@ -18,7 +18,7 @@ export class AuthController{
     
     @Post('register')
     async register(@Body() body: AuthRegisterDTO){
-        this.userService.create(body);
+        this.authService.register(body);
     }
 
     @Post('forget')

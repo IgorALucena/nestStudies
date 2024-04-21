@@ -7,7 +7,7 @@ export class LogInterceptor implements NestInterceptor{
         
         const dt = Date.now();
         
-        return next.handle().pipe(tap(()=>{
+        return next.handle().pipe(tap(()=>{ // após a execução de um ato, faça...
             
             const request = context.switchToHttp().getRequest();
 

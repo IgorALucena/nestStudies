@@ -1,43 +1,72 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
+import { AuthRegisterDTO } from "./dto/auth-register.dto";
+import { UserService } from "src/user/user.service";
 
 
 @Injectable()
-export class AuthService{
-    constructor(private readonly jwtService: JwtService, private readonly prisma:PrismaService){}
+export class AuthService {
 
-    async createToken(){
-        //return this.jwtService.sign()
+    constructor(private readonly jwtService: JwtService, private readonly prisma: PrismaService, private readonly userService: UserService) { }
+
+    async createToken(user: User) {
+        return {
+            acessToken: this.jwtService.sign(
+                {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email
+
+                },
+                {
+                    expiresIn: "7 days",
+                    subject: String(user.id),
+                    issuer: 'login',
+                    audience: 'users'
+                })
+        }
     }
 
-    async checkToken(token:String){
+
+    /*
+    expiresIn: Define o tempo de expiração do token. Neste caso, o token expirará após 7 dias.
+    subject: Representa o assunto do token. Normalmente, é o identificador único do usuário. Aqui, está sendo usado o ID do usuário convertido em string.
+    issuer: Indica a entidade que emitiu o token. Neste caso, está definido como 'login'.
+    audience: Especifica para quem o token é destinado. Aqui, é definido como 'users', indicando que o token é destinado aos usuários do sistema.
+    Isso se refere as: chaves de identificação do token: iss, sub, aud, exp, nbf, iat, jti 
+    */
+
+
+
+    async checkToken(token: String) {
         //return this.jwtService.verify()
     }
 
-    async login(email:string, password:string){
+    async login(email: string, password: string) {
         const user = await this.prisma.user.findFirst({
-            where:{
+            where: {
                 email,
                 password
             }
         })
 
-        if(!user){
+        if (!user) {
             throw new UnauthorizedException("E-mail ou senha incorretos.");
         }
 
-        return user;
+        return this.createToken(user);
 
     }
 
-    async forget(email: string){
+    async forget(email: string) {
         const user = await this.prisma.user.findFirst({
-            where:{
+            where: {
                 email
             }
         })
-        if(!user){
+        if (!user) {
             throw new UnauthorizedException("E-mail está incorreto");
         }
 
@@ -46,22 +75,29 @@ export class AuthService{
         //Fazer: enviar o e-mail...
     }
 
-    async reset(password: string, token: string){
+    async reset(password: string, token: string) {
 
         // Fazer: validar o token e trocar a senha
 
         const id = 0
 
-        await this.prisma.user.update({
+        const user = await this.prisma.user.update({
             where: {
                 id
             },
-            data:{
+            data: {
                 password
             }
         })
-
+        return this.createToken(user);
 
     }
-    
+
+    async register(data: AuthRegisterDTO) {
+
+        const user = await this.userService.create(data);
+        return this.createToken(user);
+
+    }
+
 }
