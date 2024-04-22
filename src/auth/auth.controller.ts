@@ -7,6 +7,7 @@ import { UserService } from "src/user/user.service";
 import { AuthService } from "./auth.service";
 import { AuthMeDTO } from "./dto/auth-me.dto";
 import { AuthGuard } from "src/guards/auth.guard";
+import { User } from "src/decorators/user.decorator";
 
 @Controller('auth')
 export class AuthController{
@@ -34,9 +35,9 @@ export class AuthController{
     }
     @UseGuards(AuthGuard)
     @Post('me')
-    async me(@Req() req){
+    async me(@User() user, @Req() req){
 
-        return {me:"ok", data: req.tokenPayLoad}
+        return {me: "ok", data: req.tokenPayLoad, user}
 
     }
 }
