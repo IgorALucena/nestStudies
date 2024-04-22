@@ -44,7 +44,7 @@ export class UserService{
         })
     }
 
-    async update(id:number, {email, name, password, birthAt}:UpdatePutUserDto){
+    async update(id:number, {email, name, password, birthAt, role}:UpdatePutUserDto){
 
         if(!(await this.show(id))){
             throw new NotFoundException("O usuário do id mencionado não existe");
@@ -52,13 +52,13 @@ export class UserService{
 
         return this.prisma.user.update({
           
-            data: {email, name, password, birthAt: birthAt ? new Date(birthAt) : null},
+            data: {email, name, password, birthAt: birthAt ? new Date(birthAt) : null, role},
             where:{
                 id
             }
         })
     }
-    async updatePartial(id:number, {email, name, password, birthAt}:UpdatePatchUserDto){
+    async updatePartial(id:number, {email, name, password, birthAt, role}:UpdatePatchUserDto){
 
         if(!(await this.show(id))){
             throw new NotFoundException("O usuário do id mencionado não existe");
@@ -77,6 +77,10 @@ export class UserService{
         }
         if(birthAt){
             data.birthAt = new Date(birthAt)
+        }
+
+        if(role){
+            data.role = role
         }
         
         return this.prisma.user.update({
