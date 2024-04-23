@@ -3,7 +3,6 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { UpdatePutUserDto } from "./dto/update-put-user.dto";
 import { UpdatePatchUserDto } from "./dto/update-patch-user.dto";
-import { NotFoundError } from "rxjs";
 import * as bcrypt from 'bcrypt'; // importa assim quando for desenvolvido em javascript
 
 @Injectable()
@@ -11,7 +10,7 @@ export class UserService{
 
     constructor(private readonly prisma:PrismaService){}
 
-    async create({email,name,password}:CreateUserDto){
+    async create({email,name,password,role}:CreateUserDto){
 
        password = await bcrypt.hash(password, await bcrypt.genSalt()); // gerando a senha com o bcrypt
 
@@ -19,7 +18,8 @@ export class UserService{
             data:{
                 email,
                 name,
-                password
+                password,
+                role
             }
         })
 
