@@ -4,6 +4,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { UpdatePutUserDto } from "./dto/update-put-user.dto";
 import { UpdatePatchUserDto } from "./dto/update-patch-user.dto";
 import { NotFoundError } from "rxjs";
+import * as bcrypt from 'bcrypt'; // importa assim quando for desenvolvido em javascript
 
 @Injectable()
 export class UserService{
@@ -11,6 +12,8 @@ export class UserService{
     constructor(private readonly prisma:PrismaService){}
 
     async create({email,name,password}:CreateUserDto){
+
+       password = await bcrypt.hash(password, await bcrypt.genSalt()); // gerando a senha com o bcrypt
 
         return await this.prisma.user.create({
             data:{
@@ -50,6 +53,8 @@ export class UserService{
             throw new NotFoundException("O usuário do id mencionado não existe");
         }
 
+        password = await bcrypt.hash(password, await bcrypt.genSalt());
+
         return this.prisma.user.update({
           
             data: {email, name, password, birthAt: birthAt ? new Date(birthAt) : null, role},
@@ -73,7 +78,7 @@ export class UserService{
             data.name = name
         }
         if(password){
-            data.password = password
+            data.password = await bcrypt.hash(password, await bcrypt.genSalt());
         }
         if(birthAt){
             data.birthAt = new Date(birthAt)

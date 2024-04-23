@@ -22,9 +22,9 @@ export class RoleGuard implements CanActivate{
 
         const {user} = context.switchToHttp().getRequest();
 
-        console.log({requiredRoles, user});
-        
-        return true;
+        const rolesfilted = requiredRoles.filter(role=>role ===user.role) //filtrando se o usuário que chega é igual a regra pegada estabelecida de acesso a role
+
+        return rolesfilted.length > 0 // como deve retornar aqui, basta eu fazer o retorno de true or falso, que ele já faz funcionar. Se true, ele libera, se false, ele não libera
 
         
     }
