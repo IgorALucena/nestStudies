@@ -5,11 +5,12 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { AuthRegisterDTO } from "./dto/auth-register.dto";
 import { UserService } from "src/user/user.service";
 import * as bcrypt from 'bcrypt';
+import { MailerService } from "@nestjs-modules/mailer";
 
 @Injectable()
 export class AuthService {
 
-    constructor(private readonly jwtService: JwtService, private readonly prisma: PrismaService, private readonly userService: UserService) { }
+    constructor(private readonly jwtService: JwtService, private readonly prisma: PrismaService, private readonly userService: UserService, private readonly mailer: MailerService) { }
 
     createToken(user: User) {
         return {
@@ -95,26 +96,60 @@ export class AuthService {
             throw new UnauthorizedException("E-mail está incorreto");
         }
 
+        const token = this.jwtService.sign({
+            id: user.id
+        }, {
+            expiresIn: "30 minutes",
+            subject: String(user.id),
+            issuer: 'forget',
+            audience: 'users',
+        });
+
+
+        await this.mailer.sendMail({
+            subject:'recuperação de senha',
+            to:'joao@hcode.com.br',
+            template:'forget',
+            context:{
+                name:user.name,
+                token
+            }
+        })
+
         return true;
 
-        //Fazer: enviar o e-mail...
     }
 
     async reset(password: string, token: string) {
 
-        // Fazer: validar o token e trocar a senha
+        try {
+            const data:any = this.jwtService.verify(token, {
+                issuer: 'forget',
+                audience: 'users',
+            });
 
-        const id = 0
-
-        const user = await this.prisma.user.update({
-            where: {
-                id
-            },
-            data: {
-                password
+            if (isNaN(Number(data.id))) {
+                throw new BadRequestException("Token é inválido.");
             }
-        })
-        return this.createToken(user);
+
+            const salt = await bcrypt.genSalt();
+            password = await bcrypt.hash(password, salt);
+
+            const user = await this.prisma.user.update({
+                where: {
+                    id: Number(data.id),
+                },
+                data: {
+                    password,
+                },
+            });
+
+            return this.createToken(user);
+
+        } catch (e) {
+            throw new BadRequestException(e);
+        }
+
 
     }
 
